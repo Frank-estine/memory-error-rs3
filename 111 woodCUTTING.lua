@@ -178,6 +178,10 @@ local function bank()
             print("No bank chest ID selected.")
         end
 
+        API.DoAction_NPC(0x5,3120,{ chosenBankChestId },50)
+        
+        API.RandomSleep2(math.random(200, 500), math.random(500, 1000), 1500)
+
         repeat until API.WaitUntilMovingEnds()
 
         if API.BankOpen2() then
@@ -194,13 +198,18 @@ local function bank()
                 local y = 3438 + math.random(-2, 2)
                 local z = 0
                 API.DoAction_WalkerW(WPOINT.new(x, y, z))    
+                print("banking oak or tree")
+
+                API.DoAction_NPC(0x5,3120,{ chosenBankChestId },50)
+                
+                API.RandomSleep2(math.random(200, 500), math.random(500, 1000), 1500)
+                API.WaitUntilMovingEnds()
             elseif treeType == "Willow" then
+                    print("rebanking willow")
             end
 
-            API.DoAction_NPC(0x5,3120,{ chosenBankChestId },50)
+            
 
-            API.RandomSleep2(math.random(200, 500), math.random(500, 1000), 1500)
-             API.WaitUntilMovingEnds()
             print("Bank did not open.")
         end
     end
