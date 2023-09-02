@@ -7,8 +7,9 @@ local oak = {38731,38731}
 local tree = {38787, 38785, 38760, 38783}
 local willow = {58006, 38627, 38616}
 
-
-
+API.Write_ScripCuRunning0("starting")
+API.Write_ScripCuRunning1(player)
+API.Write_ScripCuRunning2("woodcutting by Frank")
 
 local bankchestid_varrock = {553,2759}
 local bankchestid_draynor = {2012,2019,2015}
@@ -43,6 +44,7 @@ print("Starting cutting trees...")
 
 
 local function check()
+    API.Write_ScripCuRunning0("checking during animations")
     ---depositItems()
     if API.IsPlayerAnimating_(player,1) then
         print("idle check")
@@ -64,7 +66,7 @@ local function depositItems()
     previncount = 0
     local maxDepositAttempts = math.random(2, 3)
     
-
+    API.Write_ScripCuRunning0("Depositing")
     if API.Invfreecount_() < math.random(5, 10) and not oreBoxFull then
         local prevInvCount = API.Invfreecount_()
         local retryAttempts = 0
@@ -99,7 +101,7 @@ end
 
 
 local function cutTreesAndBankLogs() -- make ur functions local for the love of god
-   
+    API.Write_ScripCuRunning0("Cut tree")
     local x = 3162 + math.random(-2, 2)
     local y = 3412 + math.random(-2, 2)
     local z = 0
@@ -137,8 +139,8 @@ local function cutTreesAndBankLogs() -- make ur functions local for the love of 
            
           
         end  
-   
-    check()
+        depositItems()
+        check()
 
         if not API.Read_LoopyLoop() then print("break") break end
     end
