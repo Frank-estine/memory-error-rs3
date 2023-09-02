@@ -1,3 +1,8 @@
+--- script Made by Frank_estine
+--- updated - 02-09-2023
+
+--- latest changelog = Autonomous fishing - just start at lumby bank with preset 1 with feathers in it. and rest is chill , 0-60 easy.
+
 local API = require("api")
 print("start near lum bank...")
 -- Get the local player's name
@@ -41,68 +46,68 @@ if level > 20 then
         print("fishing low lvls now")
 end
 
-function idles()
-    if API.Math_RandomNumber(1000) > 994 then
-        API.PIdle22()
-    end
-end
 
 local function check()
     ---depositItems()
     if API.IsPlayerAnimating_(player,1) then
+        print("idle check")
         repeat
-            idles() 
+            if math.random(0,1000) > 994 then
+                API.PIdle22()
+            end
                 if not API.Read_LoopyLoop() then print("break") break end
             API.RandomSleep2(1500,2500, 2500) -- Adjust sleep time as needed
-            print("idle check")
+            
             API.DoRandomEvents()
        until not API.CheckAnim(50) or API.InvFull_() or not API.Read_LoopyLoop()
+       print("over check")
     end
 end
 
 -- Define the fish function
 local function fish()
-
---check change level for fishing
-    level = API.XPLevelTable(API.GetSkillXP("FISHING"))
-    if level > 20 then
-        fishid = highfish
-        fish_bool = 1
-        print("fishing high lvls now")
-    else
-        fishid = crayfish
-        fish_bool = 0
-        print("fishing low lvls now")
-    end
-
---check change area for fishing
-    if fish_bool==0 then
-            local x = 3254 + math.random(-2, 2)
-            local y = 3206 + math.random(-2, 2)
-            local z = 0        
-        if not API.PInArea(x,10,y,10,0) then
-            print("go to fishing spot crayfish....")
-            API.DoAction_WalkerW(WPOINT.new(x, y, z))
-        end
-    else
-        local x = 3239 + math.random(-2, 2)
-        local y = 3252 + math.random(-2, 2)
-        local z = 0
-        if not API.PInArea(x,30,y,30,0) then
-            print("go to fishing spot trout....")
-            API.DoAction_WalkerW(WPOINT.new(x, y, z))
-        end
-    end
-
-    check()
-
+    local player = API.GetLocalPlayerName()
+    --check change level for fishing
     if not API.IsPlayerAnimating_(player,1) then
-        API.DoAction_NPC(0x3c,3120,fishid,50)
-        print("Fishing...")
-        API.RandomSleep2(2500, 3050, 2500)
-        API.WaitUntilMovingEnds()
-    end
+            level = API.XPLevelTable(API.GetSkillXP("FISHING"))
+            if level > 20 then
+                fishid = highfish
+                fish_bool = 1
+                print("fishing high lvls now")
+            else
+                fishid = crayfish
+                fish_bool = 0
+                print("fishing low lvls now")
+            end
 
+            --check change area for fishing
+            if fish_bool==0 then
+                    local x = 3254 + math.random(-2, 2)
+                    local y = 3206 + math.random(-2, 2)
+                    local z = 0        
+                if not API.PInArea(x,10,y,10,0) then
+                    print("go to fishing spot crayfish....")
+                    API.DoAction_WalkerW(WPOINT.new(x, y, z))
+                end
+            else
+                local x = 3239 + math.random(-2, 2)
+                local y = 3252 + math.random(-2, 2)
+                local z = 0
+                if not API.PInArea(x,30,y,30,0) then
+                    print("go to fishing spot trout....")
+                    API.DoAction_WalkerW(WPOINT.new(x, y, z))
+                end
+            end
+
+    
+
+    
+            API.DoAction_NPC(0x3c,3120,fishid,50)
+            print("Fishing...")
+            API.RandomSleep2(2500, 3050, 2500)
+            API.WaitUntilMovingEnds()
+    end
+    check()
     local skillxpstart = API.GetSkillXP("FISHING")
 end
 
