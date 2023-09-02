@@ -1,5 +1,10 @@
 local API = require("api")
+print("start near lum bank...")
+-- Get the local player's name
+local player = API.GetLocalPlayerName()
 
+---xps
+print("Current lvl " .. API.XPLevelTable(API.GetSkillXP("FISHING")))
 
 
 -- Define the spots IDs
@@ -10,178 +15,161 @@ local highfish = {329}
 local trout = {335}
 local salmon = {331}
 
--- Get the local player's name
-local player = API.GetLocalPlayerName()
-
+--bank
 local banknpc = {553,2759}
-
 local banklum = {79036}
+
+--boolean
+local fish_bool = 0
+
+
 
 API.Write_ScripCuRunning1(player)
 API.Write_ScripCuRunning2("fishing f2p")
--- Get the user's selection
-local Cselect = API.ScriptDialogWindow2("Fishing", {
-    "Crayfish", "Highfish"
-},"Start", "Close").Name;
+
 
 -- Assign the fish ID based on the user's selection
 local fishid
-if Cselect == "Crayfish" then
-    fishid = crayfish
-elseif Cselect == "Highfish" then
-    fishid = highfish
+local level = API.XPLevelTable(API.GetSkillXP("FISHING"))
+if level > 20 then
+        fishid = highfish
+        fish_bool = 1
+        print("fishing high lvls now")
+    else
+        fishid = crayfish
+        fish_bool = 0
+        print("fishing low lvls now")
+end
+
+function idles()
+    if API.Math_RandomNumber(1000) > 994 then
+        API.PIdle22()
+    end
+end
+
+local function check()
+    ---depositItems()
+    if API.IsPlayerAnimating_(player,1) then
+        repeat
+            idles() 
+                if not API.Read_LoopyLoop() then print("break") break end
+            API.RandomSleep2(1500,2500, 2500) -- Adjust sleep time as needed
+            print("idle check")
+            API.DoRandomEvents()
+       until not API.CheckAnim(50) or API.InvFull_() or not API.Read_LoopyLoop()
+    end
 end
 
 -- Define the fish function
 local function fish()
-    API.DoAction_NPC(0x3c,3120,fishid,50)
-    print("Fishing...")
-    API.RandomSleep2(2500, 3050, 2500)
+
+--check change level for fishing
+    level = API.XPLevelTable(API.GetSkillXP("FISHING"))
+    if level > 20 then
+        fishid = highfish
+        fish_bool = 1
+        print("fishing high lvls now")
+    else
+        fishid = crayfish
+        fish_bool = 0
+        print("fishing low lvls now")
+    end
+
+--check change area for fishing
+    if fish_bool==0 then
+            local x = 3254 + math.random(-2, 2)
+            local y = 3206 + math.random(-2, 2)
+            local z = 0        
+        if not API.PInArea(x,10,y,10,0) then
+            print("go to fishing spot crayfish....")
+            API.DoAction_WalkerW(WPOINT.new(x, y, z))
+        end
+    else
+        local x = 3239 + math.random(-2, 2)
+        local y = 3252 + math.random(-2, 2)
+        local z = 0
+        if not API.PInArea(x,30,y,30,0) then
+            print("go to fishing spot trout....")
+            API.DoAction_WalkerW(WPOINT.new(x, y, z))
+        end
+    end
+
+    check()
+
+    if not API.IsPlayerAnimating_(player,1) then
+        API.DoAction_NPC(0x3c,3120,fishid,50)
+        print("Fishing...")
+        API.RandomSleep2(2500, 3050, 2500)
+        API.WaitUntilMovingEnds()
+    end
+
+    local skillxpstart = API.GetSkillXP("FISHING")
 end
+
 
 local function bank1()
     print("banking now... full inv....")
 
     -- bank tile
-    local x = 3233 + math.random(-2, 2)
-    local y = 3230 + math.random(-2, 2)
-    local z = 0
-    repeat
-        if not API.Read_LoopyLoop() then break end  -- Add this line
-        API.DoAction_Tile(WPOINT.new(x, y, z))
-        API.RandomSleep2(500, 3050, 2000)
-    until API.IsPlayerMoving_(player) or not API.Read_LoopyLoop() -- Added loop protection
-
-
-    repeat 
-        API.RandomSleep2(500, 3050, 2000) 
-    until API.PInArea(x,10,y,10,z) or not API.Read_LoopyLoop() 
-
-
-    -- bank tile
     local x = 3214 + math.random(-2, 2)
     local y = 3257 + math.random(-2, 2)
     local z = 0
+
+    API.DoAction_WalkerW(WPOINT.new(x, y, z))
+
+ print ("finish walk to bank")
+ check()
     repeat
         if not API.Read_LoopyLoop() then break end  -- Add this line
-        API.DoAction_Tile(WPOINT.new(x, y, z))
-        API.RandomSleep2(500, 3050, 2000)
-    until API.IsPlayerMoving_(player) or not API.Read_LoopyLoop() -- Added loop protection
-
-    repeat 
-        API.RandomSleep2(500, 3050, 2000) 
-    until API.PInArea(x,10,y,10,z) or not API.Read_LoopyLoop() 
-
-    repeat
-        if not API.Read_LoopyLoop() then break end  -- Add this line
-        print("to bank....")
+        print("opening bank....")
         API.DoAction_Object_r(0xb5,0,banklum,50,FFPOINT.new(0, 0, 0),50)
-        API.RandomSleep2(500, 3050, 12000)
+        API.RandomSleep2(1500, 3050, 12000)
+        if not API.Read_LoopyLoop() then break end  -- Add this line
 
-        print("wait for stop moving")
-        while API.IsPlayerMoving_(player) do
-            if not API.Read_LoopyLoop() then break end  -- Add this line
-            API.RandomSleep2(1500, 3050, 1500)
-        end
     until API.BankOpen2() or not API.Read_LoopyLoop() -- Added loop protection
-
-    print("Bank open...")
-    print("depositing stuff...")
+    check()
 
     if  API.BankOpen2() then
-        API.BankAllItems()
+        API.RandomSleep2(1000, 2000)
+        API.DoAction_Interface(0x24,0xffffffff,1,517,119,1,5392) --- preset 1
         API.RandomSleep2(1000, 2000)
     end
 
-
-    -- bank tile
-    local x = 3233 + math.random(-2, 2)
-    local y = 3230 + math.random(-2, 2)
-    local z = 0
-
-    repeat
-        if not API.Read_LoopyLoop() then break end  -- Add this line
-        API.DoAction_Tile(WPOINT.new(x, y, z))
-        API.RandomSleep2(500, 3050, 2000)
-    until API.IsPlayerMoving_(player) or not API.Read_LoopyLoop() -- Added loop protection
-
-    repeat 
-        API.RandomSleep2(500, 3050, 2000) 
-    until API.PInArea(x,10,y,10,z) or not API.Read_LoopyLoop() 
-
- 
-    local x = 3254 + math.random(-2, 2)
-    local y = 3206 + math.random(-2, 2)
-    local z = 0
-    print("returning....")
-    repeat
-        if not API.Read_LoopyLoop() then break end  -- Add this line
-        API.DoAction_Tile(WPOINT.new(x, y, z))
-        API.RandomSleep2(500, 3050, 12000)
-    until API.IsPlayerMoving_(player) or not API.Read_LoopyLoop() -- Added loop protection
-
-    repeat 
-        API.RandomSleep2(500, 3050, 2000) 
-    until API.PInArea(x,10,y,10,z) or not API.Read_LoopyLoop() 
-
+    check()
 end
 
 
 
 
-local function bank()
-    print("banklum")
-    repeat
-        if not API.Read_LoopyLoop() then break end  -- Add this line
-        print("to bank....")
-        API.DoAction_Object_r(0xb5,0,banklum,50,FFPOINT.new(0, 0, 0),50)
-        API.RandomSleep2(500, 3050, 12000)
-
-        print("wait for stop moving")
-        while API.IsPlayerMoving_(player) do
-            if not API.Read_LoopyLoop() then break end  -- Add this line
-            API.RandomSleep2(1500, 3050, 1500)
-        end
-    until API.BankOpen2() or not API.Read_LoopyLoop() -- Added loop protection
-
-    if  API.BankOpen2() then
-        API.BankAllItems()
-        API.RandomSleep2(1000, 2000)
-        API.KeyboardPress('2', 60, 100)
-        API.RandomSleep2(1000, 2000)
-    end
-
-
-
-
-
-end
 
 --main loop
 API.Write_LoopyLoop(true)
 while(API.Read_LoopyLoop()) do
-    if API.IsPlayerAnimating_(player,1) then
-        API.RandomSleep2(1500, 1800, 1200)
-    else
-        if not API.IsPlayerAnimating_(player,3) then
-            if API.Invfreecount_() == 0 then
-                print("Dropping fish")
-                if API.Check_continue_Open() then
-                    API.KeyboardPress31(32, 500, 1200)
-                    print("Close dialogue...")
-                end
-
-                repeat
-                    if not API.Read_LoopyLoop() then break end  -- Add this line
-                    if API.InvItemcount_1(trout[1]) > 0 or API.InvItemcount_1(salmon[1]) > 0 then
-                        bank()
-                    else
-                        bank1()
+    if API.PlayerLoggedIn() then
+        if API.IsPlayerAnimating_(player,1) then
+            API.RandomSleep2(1500, 1800, 1200)
+        else
+            if not API.IsPlayerAnimating_(player,3) then
+                if API.Invfreecount_() == 0 then
+                    print("Dropping fish")
+                    if API.Check_continue_Open() then
+                        API.KeyboardPress31(32, 500, 1200)
+                        print("Close dialogue...")
                     end
-                until API.Invfreecount_() >= math.random(20, 25) or not API.Read_LoopyLoop() -- Added loop protection
-            else
-                fish()
+
+                    repeat
+                    if not API.Read_LoopyLoop() then break end  -- Add this line
+
+                    bank1()
+                    
+                    until API.Invfreecount_() >= math.random(20, 25) or not API.Read_LoopyLoop() -- Added loop protection
+                else
+                    fish()
+                end
             end
         end
+    else
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,906,76,-1,5392) --login
+        API.RandomSleep2(1500, 1800, 1200)
     end
 end
