@@ -1,5 +1,7 @@
 local API = require("api")
 
+
+-- PRESET 1 WITH WOODBOX AND KEYPRESS S FOR DEPOSITING IN WOODBOX
 local player = API.GetLocalPlayerName()
 
 -- Add more tree IDs for different tree types
@@ -12,7 +14,7 @@ API.Write_ScripCuRunning1(player)
 API.Write_ScripCuRunning2("woodcutting by Frank")
 
 local bankchestid_varrock = {553,2759}
-local bankchestid_draynor = {2012,2019,2015}
+local bankchestid_draynor = {4459,4458,4457,4456}
 
 local treeOptions = {
     "Oak",
@@ -102,13 +104,23 @@ end
 
 local function cutTreesAndBankLogs() -- make ur functions local for the love of god
     API.Write_ScripCuRunning0("Cut tree")
-    local x = 3162 + math.random(-2, 2)
-    local y = 3412 + math.random(-2, 2)
-    local z = 0
 
-   if not API.PInArea(x,5,y,5,0) then
-        API.DoAction_WalkerW(WPOINT.new(x, y, z))  
-   end
+    if treeType == "Oak" or treeType == "tree" then
+        local x = 3162 + math.random(-2, 2)
+        local y = 3412 + math.random(-2, 2)
+        local z = 0
+        if not API.PInArea(x,5,y,5,0) then
+            API.DoAction_WalkerW(WPOINT.new(x, y, z))  
+       end   
+    elseif treeType == "Willow" then
+        local x = 3090 + math.random(-2, 2)
+        local y = 3232 + math.random(-2, 2)
+        local z = 0
+        if not API.PInArea(x,5,y,5,0) then
+            API.DoAction_WalkerW(WPOINT.new(x, y, z))  
+       end 
+    end
+
 
    
     while API.Invfreecount_() > 0 and API.Read_LoopyLoop() do
@@ -139,7 +151,7 @@ local function cutTreesAndBankLogs() -- make ur functions local for the love of 
            
           
         end  
-        depositItems()
+        --depositItems()
         check()
 
         if not API.Read_LoopyLoop() then print("break") break end
@@ -175,12 +187,18 @@ local function bank()
             API.KeyboardPress('1', 60, 200)
             print("Closing the bank...")
         else   
-             -- bank tile
-            local x = 3186 + math.random(-2, 2)
-            local y = 3438 + math.random(-2, 2)
-            local z = 0
-            API.DoAction_WalkerW(WPOINT.new(x, y, z))          
+            -- bank tile
+      
+            if treeType == "Oak" or treeType == "tree" then
+                local x = 3186 + math.random(-2, 2)
+                local y = 3438 + math.random(-2, 2)
+                local z = 0
+                API.DoAction_WalkerW(WPOINT.new(x, y, z))    
+            elseif treeType == "Willow" then
+            end
+
             API.DoAction_NPC(0x5,3120,{ chosenBankChestId },50)
+
             API.RandomSleep2(math.random(200, 500), math.random(500, 1000), 1500)
              API.WaitUntilMovingEnds()
             print("Bank did not open.")
