@@ -39,14 +39,19 @@ function bank()
 end
 
 API.Write_LoopyLoop(true)
+API.Write_LoopyLoop(true)
 while(API.Read_LoopyLoop()) do
     bank()
     repeat
+        freecount = API.Invfreecount_()
     API.DoAction_Interface(0x31,0xaf10,1,1473,5,0,5392)
     API.RandomSleep2(250, 500,250) 
+    freecount1 = API.Invfreecount_()
+
+    if freecount == freecount1 then break end
    until API.InvFull_() or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
 
    
 
 end
-print ("looped amount :" .. mainloop)
+
