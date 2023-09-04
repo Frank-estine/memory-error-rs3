@@ -43,7 +43,7 @@ while(API.Read_LoopyLoop()) do
     bank()
     repeat
     API.DoAction_Interface(0x31,0xaf10,1,1473,5,0,5392)
-    API.RandomSleep2(250, 250,250) 
+    API.RandomSleep2(250, 500,250) 
    until API.InvFull_() or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
 
    
