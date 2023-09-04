@@ -38,20 +38,28 @@ function bank()
 
 end
 
-API.Write_LoopyLoop(true)
+local freecount = 0
+local freecount1 = 0
+
 API.Write_LoopyLoop(true)
 while(API.Read_LoopyLoop()) do
-    bank()
-    repeat
-        freecount = API.Invfreecount_()
-    API.DoAction_Interface(0x31,0xaf10,1,1473,5,0,5392)
-    API.RandomSleep2(250, 500,250) 
-    freecount1 = API.Invfreecount_()
+    while(API.Read_LoopyLoop()) do
+        if API.Invfreecount_() == 0 then
+            bank()
+        else
+            freecount = API.Invfreecount_()
+             API.DoAction_Interface(0x31,0xaf10,1,1473,5,0,5392)
+            API.RandomSleep2(250, 500,250) 
+            freecount1 = API.Invfreecount_()
+            if freecount == freecount1 then break end
+        end
+    end
 
-    if freecount == freecount1 then break end
+
+
+   
    until API.InvFull_() or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
 
    
 
 end
-
