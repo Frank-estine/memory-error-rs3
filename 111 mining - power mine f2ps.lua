@@ -7,6 +7,7 @@ ID = {
     coal = {113103,113102,113101},
     mithril = {113050,113051,113052},
     adamantite = {113055,113053,113054},
+    banite = {113204,113203},
     runite = {113125,113127,113126},
     rune_ore = {451},
     geodes = {44816}
@@ -36,46 +37,91 @@ local startXp = API.GetSkillXP("MINING")
 local startTime = os.time()
 local player = API.GetLocalPlayerName()
 local Cselect = API.ScriptDialogWindow2("Mining", {
-    "Copper", "Iron", "Coal", "Mithril", "Adamantite", "Runite"
-},"Start", "Close").Name;
+    "Copper", "Iron", "Coal", "Mithril", "Adamantite", "Runite", "Banite" -- Add "Banite" here
+}, "Start", "Close").Name;
+
 
 --Assign stuff here
 if "Copper" == Cselect then
     ScripCuRunning1 = "Mine copper";
     ore = ID.copper
-end
-if "Iron" == Cselect then
+elseif "Iron" == Cselect then
     ScripCuRunning1 = "Mine iron";
     ore = ID.iron
-end
-if "Coal" == Cselect then
+elseif "Coal" == Cselect then
     ScripCuRunning1 = "Mine coal";
     ore = ID.coal
-end
-if "Mithril" == Cselect then
+elseif "Mithril" == Cselect then
     ScripCuRunning1 = "Mine mithril";
     ore = ID.mithril
-end
-if "Adamantite" == Cselect then
+elseif "Adamantite" == Cselect then
     ScripCuRunning1 = "Mine adamantite";
     ore = ID.adamantite
-end
-if "Runite" == Cselect then
+elseif "Runite" == Cselect then
     ScripCuRunning1 = "Mine runite";
     ore = ID.runite
+elseif "Banite" == Cselect then
+    ScripCuRunning1 = "Mine banite";
+    ore = ID.banite -- Assign the "banite" IDs here
 end
+
 
 print("Starting with:", ScripCuRunning1);
 
-function fillorebox()
-    --if API.InvItemFound2(Orebox)then--Need All OreBox's
-        print("OreBox Found")
-        API.DoAction_Interface(0x24,0xaef5,1,1473,5,0,5392) -- rune orebox
-        API.RandomSleep2(650, 250, 250)
-    --end
-    -- Update the totalOres variable after depositing the ores into the ore box
-    totalOres = totalOres + currentMiningStrings
+
+oreBoxFull = false
+
+local function depositItems()
+    local depositAttempts = 0
+    previncount = 0
+    local maxDepositAttempts = math.random(2, 3)
+    
+    API.Write_ScripCuRunning0("Depositing")
+    if API.Invfreecount_() < math.random(5, 10) and not oreBoxFull then
+        local prevInvCount = API.Invfreecount_()
+        local retryAttempts = 0
+        local depositSuccess = false
+        repeat
+        if retryAttempts <= maxDepositAttempts and not depositSuccess and not oreBoxFull then
+            API.KeyboardPress('s', 60, 100)
+            API.RandomSleep2(math.random(200, 500), math.random(500, 1000),1500)
+
+            if prevInvCount == API.Invfreecount_() then
+                retryAttempts = retryAttempts + 1
+                print("Retrying deposit attempt #" .. retryAttempts)
+            else
+                depositSuccess = true
+                retryAttempts = 0
+                print("Deposited items successfully.")
+            end
+
+            if retryAttempts > maxDepositAttempts then
+                oreBoxFull = true
+                print("Ore box full.")
+            end
+        end
+        until retryAttempts == 0 or oreBoxFull
+    end
+
+    API.RandomSleep2(2500, 3050, 12000)
+
+   
+
 end
+
+function drop_ore()
+    
+    if API.Invfreecount_() < math.random(5,10) and API.Read_LoopyLoop() then
+            
+        repeat
+            API.KeyboardPress('a', 60, 1000) 
+            API.RandomSleep2(150, 500, 200)
+            print(API.Invfreecount_())
+        until API.Invfreecount_() > math.random(5,10) or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
+    end
+
+end
+
 
 local function mining()
 
@@ -101,26 +147,26 @@ local function mining()
             if foundSparkling then
                 API.RandomSleep2(2500, 3050, 12000)
             else
+               
                 API.DoAction_Object_r(0x3a, 0, ore, 50, FFPOINT.new(0, 0, 0), 50)
                 API.RandomSleep2(2500, 3050, 12000)
             end
         end
+    until API.Invfreecount_() == 0 or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
 
 
-            
-
-        if API.Invfreecount_() < math.random(5,10) and API.Read_LoopyLoop() then
-            repeat
-                API.KeyboardPress('a', 60, 1000) 
-                API.RandomSleep2(150, 500, 200)
-                print(API.Invfreecount_())
-            until API.Invfreecount_() > math.random(5,10) or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
+        if oreBoxFull then
+        drop_ore()
+        else  
+        depositItems()            
         end
-        if not API.Read_LoopyLoop() then break end
+       
+
+        if not API.Read_LoopyLoop() then return end
         
 
         API.RandomSleep2(2500, 3050, 12000)
-    until API.Invfreecount_() == 0 or not API.Read_LoopyLoop() or not API.PlayerLoggedIn()
+
     end
 
         miningloop = miningloop + 1
