@@ -1,4 +1,4 @@
-print("Run Lua script 111 CHaos altar.")
+print("Run Lua script 111 necro.")
 
 local API = require("api")
 
@@ -23,7 +23,7 @@ local function bank()
         API.RandomSleep2(1000, 2000)
     end
 
-    repeat until API.BankClose()
+    repeat until API.Invfreecount_() <= 27 or not API.Read_LoopyLoop() or not API.BankOpen2()
 end
 
 local function offer()
@@ -37,7 +37,7 @@ local function offer()
         if math.random(0,1500) > 800 then
             API.PIdle2()
         end
-    until API.Invfreecount_() == 28 or not API.Read_LoopyLoop()
+    until API.Invfreecount_() <= 27  or not API.Read_LoopyLoop() or not API.IsPlayerAnimating_(player,1)
 
 end
 
@@ -53,15 +53,18 @@ if API.PlayerLoggedIn then
     end
 
     if API.Invfreecount_() == 28 then
-    bank()
-    
-    if API.Invfreecount_() == 28 then API.Write_LoopyLoop(false) break end
+     bank()
     end
+
+    if API.Invfreecount_() == 28 then API.Write_LoopyLoop(false) break end
+       
     if API.Invfreecount_() <= 27 then
         offer()
-        end
-    print( "looped amount :"..loopc)
-    loopc=loopc+1
+    end
+
 end
 
+loopc=loopc+1
+print( "looped amount :"..loopc)
+   
 end----------------------------------------------------------------------------------
