@@ -1,4 +1,4 @@
-print("Run Lua script 111 necro.")
+print("Run Lua script 111 CHaos altar.")
 
 local API = require("api")
 
@@ -19,37 +19,25 @@ local function bank()
     until  not API.IsPlayerMoving_(player)  or not API.Read_LoopyLoop()
     
     if  API.BankOpen2() then
-      
-        API.KeyboardPress('3', 60, 100)
         API.KeyboardPress('2', 60, 100)
         API.RandomSleep2(1000, 2000)
-
-       
     end
+
+    repeat until API.BankClose()
 end
 
 local function offer()
    
-    if API.InvItemcount_1(bones)==0 then
-        
-    return
-
-    end
     API.DoAction_Object_r(0x29,80,{122374},50,WPOINT.new(0,0,0),5)
-   
-
     API.RandomSleep2(1200,1500,2500)
-  
-    repeat 
-        API.RandomSleep2(2200, 1050, 1500)  
-    until  not API.IsPlayerMoving_(player)  or not API.Read_LoopyLoop()
+    API.WaitUntilMovingEnds()
   
     repeat
         API.RandomSleep2(3200,1500,2500)
         if math.random(0,1500) > 800 then
             API.PIdle2()
         end
-    until API.InvItemcount_1(bones)==0 or not API.Read_LoopyLoop()
+    until API.Invfreecount_() == 28 or not API.Read_LoopyLoop()
 
 end
 
@@ -64,15 +52,14 @@ if API.PlayerLoggedIn then
         API.PIdle2()
     end
 
-    if API.InvItemcount_1(bones)==0 then
+    if API.Invfreecount_() == 28 then
     bank()
+    
+    if API.Invfreecount_() == 28 then API.Write_LoopyLoop(false) break end
     end
-    if API.InvItemcount_1(bones) > 0 then
+    if API.Invfreecount_() <= 27 then
         offer()
         end
-
-     
-
     print( "looped amount :"..loopc)
     loopc=loopc+1
 end
