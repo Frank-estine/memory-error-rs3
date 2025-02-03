@@ -164,13 +164,22 @@ end
 
 -- main loop
 while API.Read_LoopyLoop() do
+    local currentTime = os.time()
+    local runDuration = os.difftime(currentTime, startTime)
 
+--break handlers
+    if runDuration > math.random(600, 900) then  -- 10-15 minutes in seconds
+        takeBreak()
+        startTime = os.time()  -- Reset start time after the break
+    end
+--Login handlers
     if API.PlayerLoggedIn() == false then
         API.Write_LoopyLoop(0)
     end
     API.SetDrawTrackedSkills(true)
     repeat
     until API.WaitUntilMovingandAnimEnds(2,2) or not API.Read_LoopyLoop()
+
 
     idleCheck()
     local allMemoryIds = getAllMemoryIds()
