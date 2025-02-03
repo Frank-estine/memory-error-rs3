@@ -4,7 +4,7 @@
 # Version:      <2>
 # Datum:        <2025.02.03>
 # Author:       <Frank-key>
-
+-- only issue is clicks the same plinth while activing using core. working on it.
 --]]
 
 -- includes
