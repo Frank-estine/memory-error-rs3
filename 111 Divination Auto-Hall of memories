@@ -82,15 +82,6 @@ local function getAllMemoryIds()
     return allIds
 end
 
-local function handleJarCollection()
-    print("Starting jar collection")
-    API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
-    API.RandomSleep2(1000, 500, 1000)
-    repeat until API.InvFull_()
-    INVENTORYFULL()
-    
-end
-
 local function INVENTORYFULL()
     if API.InvFull_() then
         repeat
@@ -101,6 +92,17 @@ local function INVENTORYFULL()
         until (API.Invfreecount_() == 1 ) or not API.Read_LoopyLoop()
     end
 end
+
+local function handleJarCollection()
+    print("Starting jar collection")
+    API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
+    API.RandomSleep2(1000, 500, 1000)
+    repeat until API.InvFull_()
+    INVENTORYFULL()
+    
+end
+
+
 local function handleJarDeposit()
  
     print("Starting jar deposit")
