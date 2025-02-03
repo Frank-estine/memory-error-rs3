@@ -1,70 +1,36 @@
-print("Run Lua script 111 necro.")
-
 local API = require("api")
+local MAX_IDLE_TIME_MINUTES = 5
 
-local player = API.GetLocalPlayerName()
+API.SetDrawTrackedSkills(true)
 
 
---- enter your bone id here --------------------------
-local bones = 526
-
-local function bank()
-   
-    API.DoAction_NPC(0x5,3408,{1786},50)
-
-    API.RandomSleep2(1200,1500,2500)
- 
-    repeat 
-        API.RandomSleep2(2500, 1050, 1500)  
-    until  not API.IsPlayerMoving_(player)  or not API.Read_LoopyLoop()
-    
-    if  API.BankOpen2() then
-        API.KeyboardPress('2', 60, 100)
-        API.RandomSleep2(1000, 2000)
-    end
-
-    repeat until API.Invfreecount_() <= 27 or not API.Read_LoopyLoop() or not API.BankOpen2()
-end
-
-local function offer()
-   
-    API.DoAction_Object_r(0x29,80,{122374},50,WPOINT.new(0,0,0),5)
-    API.RandomSleep2(1200,1500,2500)
-    API.WaitUntilMovingEnds()
-  
-    repeat
-        API.RandomSleep2(3200,1500,2500)
-        if math.random(0,1500) > 800 then
-            API.PIdle2()
-        end
-    until API.Invfreecount_() <= 27  or not API.Read_LoopyLoop() or not API.IsPlayerAnimating_(player,1)
-
-end
-
-local loopc=0
---Exported function list is in API
---main loop
 API.Write_LoopyLoop(true)
-while(API.Read_LoopyLoop())
-do-----------------------------------------------------------------------------------
-if API.PlayerLoggedIn then
-    if math.random(0,1500) > 800 then
+while API.Read_LoopyLoop() do
+
+    if API.InvItemcount_String("Dragon Bones") == 0 then
+
+        API.DoAction_NPC(0x33,API.OFF_ACT_InteractNPC_route4,{ 1786 },50)
+
+        API.RandomSleep2(1000, 2000, 2500)   
+        repeat until API.WaitUntilMovingEnds(5,2)
+            
+        if API.Invfreecount_() == 28 then
+            break
+            print("Banking fail")
+        end
+    end
+    
+    API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route1,{ 122374 },50)
+
+
+    repeat
+        API.RandomSleep2(3000, 2000, 2500) 
         API.PIdle2()
-    end
-
-    if API.Invfreecount_() == 28 then
-     bank()
-    end
-
-    if API.Invfreecount_() == 28 then API.Write_LoopyLoop(false) break end
-       
-    if API.Invfreecount_() <= 27 then
-        offer()
-    end
+    until API.WaitUntilMovingandAnimEnds(5,2)
+    
 
 end
 
-loopc=loopc+1
-print( "looped amount :"..loopc)
-   
-end----------------------------------------------------------------------------------
+
+
+
