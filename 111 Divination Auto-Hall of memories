@@ -4,7 +4,7 @@
 # Version:      <2>
 # Datum:        <2025.02.03>
 # Author:       <Frank-key>
--- only issue is clicks the same plinth while activing using core. working on it.
+
 --]]
 
 -- includes
@@ -123,7 +123,7 @@ local function checkitems()
             API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{ JAR.PLINT },50);
             API.WaitUntilMovingandAnimEnds(5,2)
         end
-    until API.InvItemcount_1(inventoryitems[1].CORE) > 0 and not API.Read_LoopyLoop()
+    until API.InvItemcount_1(inventoryitems[1].CORE) == 0 and not API.Read_LoopyLoop()
 
 end
 
