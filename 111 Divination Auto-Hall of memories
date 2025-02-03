@@ -174,7 +174,7 @@ while API.Read_LoopyLoop() do
     API.SetDrawTrackedSkills(true)
     repeat
     until API.WaitUntilMovingandAnimEnds(2,2) or not API.Read_LoopyLoop()
-    print(API.InvItemcount_1(inventoryitems[1].CORE))
+
     idleCheck()
     local allMemoryIds = getAllMemoryIds()
     --print("All memory IDs: " .. table.concat(allMemoryIds, ", "))
