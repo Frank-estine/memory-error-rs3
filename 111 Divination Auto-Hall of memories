@@ -117,13 +117,14 @@ end
 
 local function checkitems()
     print("Checking items")
-    print(API.InvItemcount_1(inventoryitems[1].CORE))
-    repeat
+  
         if API.InvItemcount_1(inventoryitems[1].CORE) > 0 then
             API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{ JAR.PLINT },50);
             API.WaitUntilMovingandAnimEnds(5,2)
+            print("Core fragments deposited")
         end
-    until API.InvItemcount_1(inventoryitems[1].CORE) == 0 and not API.Read_LoopyLoop()
+        print(API.InvItemcount_1(inventoryitems[1].CORE))
+
 
 end
 
