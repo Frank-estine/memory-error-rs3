@@ -97,7 +97,7 @@ local function handleJarCollection()
     print("Starting jar collection")
     API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
     API.RandomSleep2(1000, 500, 1000)
-    repeat API.RandomSleep2(1000, 500, 1000) until API.InvFull_() and not API.Read_LoopyLoop()
+    API.WaitUntilMovingandAnimEnds(2,2)
     INVENTORYFULL()
     
 end
@@ -108,9 +108,6 @@ local function handleJarDeposit()
  
     print("Starting jar deposit")
     API.DoAction_Object_r(0x29, 0, {JAR.MEMORY_ARCHIVE}, 74, WPOINT.new(2204, 9134, 0), 74)
-    API.WaitUntilMovingandAnimEnds(5,2)
-    API.RandomSleep2(1500, 1000, 1500)
-    API.WaitUntilMovingandAnimEnds(5,2)
     print("Jar deposit completed")
     
 end
