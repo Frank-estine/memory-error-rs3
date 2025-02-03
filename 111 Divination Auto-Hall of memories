@@ -160,7 +160,11 @@ end
 
 
 
-
+local function takeBreak()
+    local breakDuration = math.random(10, 30)
+    print("Taking a break for", breakDuration, "seconds")
+    API.RandomSleep2(breakDuration * 1000, 0, 0)
+end
 
 -- main loop
 while API.Read_LoopyLoop() do
