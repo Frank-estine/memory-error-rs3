@@ -97,10 +97,11 @@ local function handleJarCollection()
     print("Starting jar collection")
     API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
     API.RandomSleep2(1000, 500, 1000)
-    repeat until API.InvFull_()
+    repeat API.RandomSleep2(1000, 500, 1000) until API.InvFull_() and not API.Read_LoopyLoop()
     INVENTORYFULL()
     
 end
+
 
 
 local function handleJarDeposit()
@@ -116,12 +117,13 @@ end
 
 local function checkitems()
     print("Checking items")
+    print(API.InvItemcount_1(inventoryitems[1].CORE))
     repeat
         if API.InvItemcount_1(inventoryitems[1].CORE) > 0 then
             API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{ JAR.PLINT },50);
             API.WaitUntilMovingandAnimEnds(5,2)
         end
-    until API.InvItemcount_1(inventoryitems[1].CORE) > 0
+    until API.InvItemcount_1(inventoryitems[1].CORE) > 0 and not API.Read_LoopyLoop()
 
 end
 
@@ -130,13 +132,14 @@ if API.FindNPCbyName("knowledge") == true then
     print("Starting swarm")
     repeat
     API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) -- knwoeldge fragment swarm
-    API.WaitUntilMovingandAnimEnds(5,2)
+    API.WaitUntilMovingandAnimEnds(2,2)
     until (API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) == false ) or not API.Read_LoopyLoop()
     print("Swarm completed")
 end
 end
 
 local function handleMemoryConversion()
+    checkitems()
     local currentLevel = API.XPLevelTable(API.GetSkillXP("DIVINATION"))
     print("Checking current Divination level: " .. currentLevel)
     
@@ -163,10 +166,14 @@ end
 
 -- main loop
 while API.Read_LoopyLoop() do
+
+    if API.PlayerLoggedIn() == false then
+        API.Write_LoopyLoop(0)
+    end
     API.SetDrawTrackedSkills(true)
     repeat
     until API.WaitUntilMovingandAnimEnds(2,2) or not API.Read_LoopyLoop()
-   
+    print(API.InvItemcount_1(inventoryitems[1].CORE))
     idleCheck()
     local allMemoryIds = getAllMemoryIds()
     --print("All memory IDs: " .. table.concat(allMemoryIds, ", "))
