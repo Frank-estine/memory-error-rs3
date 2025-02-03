@@ -1,192 +1,271 @@
 --[[
-# Script Name:  <Divination Auto-Hall of memories>
-# Description:  <Hall of Memories Divination, Handles {jars,corefrags,Knowledge swarm,Harvest centre, and keeps one slot empty for any drops.}>
-# Version:      <2>
-# Datum:        <2025.02.03>
-# Author:       <Frank-key>
+# Script Name:  <Galactic Halls>
+# Description:  <Hall of Memories Divination, Picks up Jars and fills, then hands in once filled.>
+# Version:      <3>
+# Datum:        <2024.02.19>
+# Author:       <Unknown- Edits/changes made by Disc - Gxlaxy>
 
+> Changes - Added in an Anti Idle to prevent it from logging out every 5 minutes (thanks to Higgins for the function)
+> Changed the Value of "API.InvItemcount_1(42900) == 28" to "API.InvItemcount_1(42900) >=27" to prevent it from breaking if there was not enough jars in invent.
+> Updated doactions in Several lines to updated Id changes.
+> Offsets updated to work with current versions.
+> Added a GUI to track xp.
+> Added in 2 tick function.
+> NOTE - I DID NOT CREATE THIS SCRIPT JUST EDITED, CHANGED, AND ADDED FUNCTIONS TO THE ORIGNAL CREATORS VERSION (Unknown)
+> Added in Knowledge Fragments - Thanks to Knetterbal for this
 --]]
 
--- includes
-local API = require("api")
+print("Run Galactic Hall of Memories.")
+print("Entering Eternal xp mode")
 
--- variables
+local API = require("api")
+local UTILS = require("utils")
 local MAX_IDLE_TIME_MINUTES = 5
 local startTime, afk = os.time(), os.time()
+local ScripCuRunning1 = ""  -- Fixed typo
+local startXp = API.GetSkillXP("DIVINATION")
+local skill = "DIVINATION"
+local tickCount = 0
 
-local MEMORY_TYPES = {
-    {level = 95, ids = {25549, 25550}},  -- Incandescent
-    {level = 90, ids = {25547, 25548}},  -- Luminous
-    {level = 85, ids = {25545, 25546}},  -- Radiant
-    {level = 80, ids = {25543, 25544}},  -- Brilliant
-    {level = 75, ids = {25542, 25541}},  -- Lustrous
-    {level = 70, ids = {25540, 25539}}   -- Faded
+local ID = {
+    AAGI = 25551,
+    SEREN = 25552,
+    JUNA = 25553,
+    SWORD_OF_EDICTS = 25554,
+    CRES = 25555,
+    KNOWLEDGE_FRAGMENT = 25564
 }
 
-local JAR = {
-    JAR_DISPENSER = 111374,
-    MEMORY_ARCHIVE = 111375,
-    PLINT = 111376 ,
+local function findNpc(npcID, distance)
+    distance = distance or 25
+    return API.Getall({ npcID }, distance, 1) > 0
+end
+
+local function CoreMemoryCheck()
+    local npcData = {
+        { ID = ID.AAGI },
+        { ID = ID.SEREN },
+        { ID = ID.JUNA },
+        { ID = ID.SWORD_OF_EDICTS },
+        { ID = ID.CRES },
+        { ID = ID.KNOWLEDGE_FRAGMENT },
     }
 
-local inventoryitems = {
-    {JAR = 42899, 
-    CORE = 42901,
-    FULLJAR = 42900,
-    EMPTYJAR = 42898,
-    EMPTYSLOT = -1 
-    }
-}
+    for _, npc in ipairs(npcData) do
+        if findNpc(npc.ID, 75) and (API.InvItemcount_1(42900) < 28 and (API.InvItemcount_1(42898) >= 1 or API.InvItemcount_1(42899) >= 1)) then
+            DoAction_NPC(0xc8, API.OFF_ACT_InteractNPC_route, { npc.ID }, 75)
+            API.WaitUntilMovingandAnimEnds()
+            API.RandomSleep2(2000, 1000, 1000)
+            return true
+        end
+    end
+    return false
+end
+
+-- Rounds a number to the nearest integer or to a specified number of decimal places.
+local function round(val, decimal)
+    if decimal then
+        return math.floor((val * 10 ^ decimal) + 0.5) / (10 ^ decimal)
+    else
+        return math.floor(val + 0.5)
+    end
+end
+
+-- Format a number with commas as thousands separator
+local function formatNumberWithCommas(amount)
+    local formatted = tostring(amount)
+    while true do
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then
+            break
+        end
+    end
+    return formatted
+end
+
+function formatNumber(num)
+    if num >= 1e6 then
+        return string.format("%.1fM", num / 1e6)
+    elseif num >= 1e3 then
+        return string.format("%.1fK", num / 1e3)
+    else
+        return tostring(num)
+    end
+end
+
+-- Format script elapsed time to [hh:mm:ss]
+local function formatElapsedTime(startTime)
+    local currentTime = os.time()
+    local elapsedTime = currentTime - startTime
+    local hours = math.floor(elapsedTime / 3600)
+    local minutes = math.floor((elapsedTime % 3600) / 60)
+    local seconds = elapsedTime % 60
+    return string.format("[%02d:%02d:%02d]", hours, minutes, seconds)
+end
+
+local function calcProgressPercentage(skill, currentExp)
+    local currentLevel = API.XPLevelTable(API.GetSkillXP(skill))
+    if currentLevel == 120 then return 100 end
+    local nextLevelExp = XPForLevel(currentLevel + 1)
+    local currentLevelExp = XPForLevel(currentLevel)
+    local progressPercentage = (currentExp - currentLevelExp) / (nextLevelExp - currentLevelExp) * 100
+    return math.floor(progressPercentage)
+end
+
+local function printProgressReport(final)
+    local skill = "DIVINATION"
+    local currentXp = API.GetSkillXP(skill)
+    local elapsedMinutes = (os.time() - startTime) / 60
+    local diffXp = math.abs(currentXp - startXp)
+    local xpPH = round((diffXp * 60) / elapsedMinutes)
+    local time = formatElapsedTime(startTime)
+    local currentLevel = API.XPLevelTable(API.GetSkillXP(skill))
+    local xplvlup = API.XPForLevel(currentLevel + 1)
+    local xp99 = API.XPForLevel(99)
+    local timeNeeded = round(((xplvlup - currentXp) / xpPH) * 60)
+    local timeneededfor99 = round(((xp99 - currentXp) / xpPH) * 60)
+    IGP.radius = calcProgressPercentage(skill, API.GetSkillXP(skill)) / 100
+    IGP.string_value = time ..
+        " | " ..
+        string.lower(skill):gsub("^%l", string.upper) ..
+        ": " ..
+        currentLevel ..
+        " | XP/H: " ..
+        formatNumber(xpPH) ..
+        " | XP: " ..
+        formatNumber(diffXp) ..
+        " | TTL: " .. formatNumber(timeNeeded) .. "m" .. " | TTL99: " .. formatNumber(timeneededfor99) .. "m"
+end
+
+local function setupGUI()
+    IGP = API.CreateIG_answer()
+    IGP.box_start = FFPOINT.new(5, 5, 0)
+    IGP.box_name = "PROGRESSBAR"
+    IGP.colour = ImColor.new(116, 2, 179);
+    IGP.string_value = "DIVINATION"
+end
+
+function drawGUI()
+    DrawProgressBar(IGP)
+end
+
+local Cselect = API.ScriptDialogWindow2("Hall Of Memories",
+    { "Faded memories", "Lustrous memories", "Brilliant memories", "Radiant memories", "Luminous memories",
+        "Incandescent memories" }, "Start", "Close").Name
+if Cselect == "Faded memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Faded memories"
+elseif Cselect == "Lustrous memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Lustrous memories"
+elseif Cselect == "Brilliant memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Brilliant memories"
+elseif Cselect == "Radiant memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Radiant memories"
+elseif Cselect == "Luminous memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Luminous memories"
+elseif Cselect == "Incandescent memories" then
+    print(Cselect)
+    ScripCuRunning1 = "Incandescent memories"
+end
 
 
 
+function FillJars()
+    if not CoreMemoryCheck() then
+        API.DoAction_NPC_str(0xc8, 1488, { ScripCuRunning1 }, 74)
+        API.RandomSleep2(2000, 1500, 2000)
+        API.WaitUntilMovingandAnimEnds()
+        API.RandomSleep2(2000, 1500, 2000)
+    end
+end
 
--- functions
-local function idleCheck()
+function GrabJars()
+    API.DoAction_Tile(WPOINT.new(2229, 9116, 0))
+    API.WaitUntilMovingEnds()
+    API.RandomSleep2(1000, 1500, 2000)
+    API.DoAction_Object_r(0x29, 0, { 111374 }, 70, WPOINT.new(2230, 9116, 0), 74)
+
+    while not API.InvFull_() do
+        API.RandomSleep2(200, 200, 200)
+    end
+
+    print("Got Jars, time to gather some shit")
+end
+
+function DepositJars()
+    API.DoAction_Tile(WPOINT.new(2207, 9120, 0))
+    API.WaitUntilMovingEnds()
+    API.RandomSleep2(2000, 1000, 1000)
+    API.DoAction_Object_r(0x29, 0, { 111375 }, 74, WPOINT.new(2204, 9134, 0), 74)
+    API.RandomSleep2(2000, 1000, 1000)
+    API.WaitUntilMovingEnds()
+    drawGUI()
+    while API.InvItemcount_1(42900) >= 1 do
+        API.RandomSleep2(1000, 1000, 1000)
+    end
+end
+
+-- Function to be called every tick
+function onTick()
+    -- Increment the tick count
+    tickCount = tickCount + 1
+
+    -- Check if two ticks have passed
+    if tickCount % 2 == 0 then
+        -- Perform the action every two ticks
+        print("Action performed every two ticks")
+    end
+end
+
+local function idleCheck() -- Thanks to Higgins for this Function
     local timeDiff = os.difftime(os.time(), afk)
     local randomTime = math.random((MAX_IDLE_TIME_MINUTES * 60) * 0.6, (MAX_IDLE_TIME_MINUTES * 60) * 0.9)
 
     if timeDiff > randomTime then
+        print("Eternal Mode Continuing.")
         API.PIdle2()
         afk = os.time()
     end
-    API.DoRandomEvents()
-    
 end
 
-local function getMemoryType(currentLevel)
-    local selectedMemory = nil
-    for _, memory in ipairs(MEMORY_TYPES) do
-        if currentLevel >= memory.level then
-            selectedMemory = memory
-            break  -- Exit the loop once a suitable memory type is found
-        end
-    end
-    
-    if selectedMemory then
-        return selectedMemory.ids  -- Return the entire table of IDs
-    else
-        print("Level too low for any memory type (min 70)")
-        API.Write_LoopyLoop(0)
-        return nil
-    end
+local function takeBreak()
+    local breakDuration = math.random(10, 30)
+    print("Taking a break for", breakDuration, "seconds")
+    API.RandomSleep2(breakDuration * 1000, 0, 0)
 end
-
-local function getAllMemoryIds()
-    local allIds = {}
-    for _, memory in ipairs(MEMORY_TYPES) do
-        for _, id in ipairs(memory.ids) do
-            table.insert(allIds, id)
-        end
-    end
-    return allIds
-end
-
-local function INVENTORYFULL()
-    if API.InvFull_() then
-        repeat
-            API.DoAction_Inventory1(42898,0,8,API.OFF_ACT_GeneralInterface_route2)
-            API.RandomSleep2(2000, 1500, 1000)
-            API.DoAction_Interface(0xffffffff,0xffffffff,0,1183,5,-1,API.OFF_ACT_GeneralInterface_Choose_option)
-            print(API.Invfreecount_())
-        until (API.Invfreecount_() == 1 ) or not API.Read_LoopyLoop()
-    end
-end
-
-local function handleJarCollection()
-    print("Starting jar collection")
-    API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
-    API.RandomSleep2(1000, 500, 1000)
-    API.WaitUntilMovingandAnimEnds(2,2)
-    INVENTORYFULL()
-    
-end
-
-
-
-local function handleJarDeposit()
- 
-    print("Starting jar deposit")
-    API.DoAction_Object_r(0x29, 0, {JAR.MEMORY_ARCHIVE}, 74, WPOINT.new(2204, 9134, 0), 74)
-    print("Jar deposit completed")
-    
-end
-
-local function checkitems()
-    print("Checking items")
-  
-        if API.InvItemcount_1(inventoryitems[1].CORE) > 0 then
-            API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{ JAR.PLINT },50);
-            API.WaitUntilMovingandAnimEnds(5,2)
-            print("Core fragments deposited")
-        end
-        print(API.InvItemcount_1(inventoryitems[1].CORE))
-
-
-end
-
-local function handleswarm()
-
-
-    repeat
-    API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) -- knwoeldge fragment swarm
-    API.WaitUntilMovingandAnimEnds(2,2)
-    until (API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) == false ) or not API.Read_LoopyLoop()
-    print("Swarm completed")
-
-end
-
-local function handleMemoryConversion()
-    checkitems()
-    local currentLevel = API.XPLevelTable(API.GetSkillXP("DIVINATION"))
-    print("Checking current Divination level: " .. currentLevel)
-    
-    local memoryIds = getMemoryType(currentLevel)
-    if not memoryIds then return end
-
-    -- action logic
-
-
-    if not API.DoAction_NPC(0xc8, API.OFF_ACT_InteractNPC_route, {25551, 25555, 25554, 25553, 25552}, 100) then
-        if not API.DoAction_NPC(0xc8, API.OFF_ACT_InteractNPC_route, {25563}, 100) then  -- corefrags 
-            if not handleswarm() then -- knwoeldge fragment swarm
-                API.DoAction_NPC(0xc8, API.OFF_ACT_InteractNPC_route, memoryIds, 100) -- memory
-            end
-        end
-    end
-
-end
-
-
-
-
-
 
 -- main loop
-while API.Read_LoopyLoop() do
-
-    if API.PlayerLoggedIn() == false then
-        API.Write_LoopyLoop(0)
-    end
-    API.SetDrawTrackedSkills(true)
-    repeat
-    until API.WaitUntilMovingandAnimEnds(2,2) or not API.Read_LoopyLoop()
-
+API.Write_LoopyLoop(1)
+setupGUI()
+while (API.Read_LoopyLoop()) 
+do --------------------------------------------------------------------------------------------
     idleCheck()
-    local allMemoryIds = getAllMemoryIds()
-    --print("All memory IDs: " .. table.concat(allMemoryIds, ", "))
-    INVENTORYFULL()
+    drawGUI()
+    printProgressReport()
+    CoreMemoryCheck()
+    onTick()
+
+    local currentTime = os.time()
+    local runDuration = os.difftime(currentTime, startTime)
+
+    if runDuration > math.random(600, 900) then  -- 10-15 minutes in seconds
+        takeBreak()
+        startTime = os.time()  -- Reset start time after the break
+    end
     
-        local fulltick = math.random(5,20)
-        --print(fulltick)
-        if API.InvItemcount_1(inventoryitems[1].FULLJAR) >= fulltick then
-            handleJarDeposit()
-        elseif API.Invfreecount_() >= 3 then
-            handleJarCollection()
-        elseif API.InvItemcount_1(inventoryitems[1].EMPTYJAR) >= 1 then
-            handleMemoryConversion()
+    if API.InvFull_() then
+        if (API.InvItemcount_1(42898) >= 1 or API.InvItemcount_1(42899) >= 1) then
+            FillJars()
+        elseif API.InvItemcount_1(42900) >= 2 then
+            DepositJars()
         end
+    else
+        GrabJars()
+    end
+end ----------------------------------------------------------------------------------
 
-end
-
-API.SetDrawTrackedSkills(false)
+print("Entering the Black Hole - Buh bye")
