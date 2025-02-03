@@ -126,14 +126,14 @@ local function checkitems()
 end
 
 local function handleswarm()
-if API.FindNPCbyName("knowledge") == true then  
-    print("Starting swarm")
+
+
     repeat
     API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) -- knwoeldge fragment swarm
     API.WaitUntilMovingandAnimEnds(2,2)
     until (API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{ 25564 },50) == false ) or not API.Read_LoopyLoop()
     print("Swarm completed")
-end
+
 end
 
 local function handleMemoryConversion()
