@@ -5,14 +5,18 @@
 # Datum:        <2025.02.03>
 # Author:       <Frank-key>
 
+changelog:
+<2025.02.03>
+--Optimisation
 --]]
 
 -- includes
 local API = require("api")
-
+API.Write_fake_mouse_do(false)
 -- variables
 local MAX_IDLE_TIME_MINUTES = 5
 local startTime, afk = os.time(), os.time()
+local player = API.GetLocalPlayerName()
 
 local MEMORY_TYPES = {
     {level = 95, ids = {25549, 25550}},  -- Incandescent
@@ -93,24 +97,40 @@ local function INVENTORYFULL()
     end
 end
 
+
+
 local function handleJarCollection()
+
     print("Starting jar collection")
     API.DoAction_Object_r(0x29, 0, {JAR.JAR_DISPENSER}, 70, WPOINT.new(2230, 9116, 0), 74)
     API.RandomSleep2(1000, 500, 1000)
-    API.WaitUntilMovingandAnimEnds(2,2)
+    API.WaitUntilMovingandAnimEnds(5,5)
     INVENTORYFULL()
     
 end
 
 
-
+local fulltick = math.random(1,10)
 local function handleJarDeposit()
- 
+    local fulljar1 = API.InvItemcount_1(inventoryitems[1].FULLJAR)
+    repeat
+        local fulljar2 = API.InvItemcount_1(inventoryitems[1].FULLJAR)
     print("Starting jar deposit")
     API.DoAction_Object_r(0x29, 0, {JAR.MEMORY_ARCHIVE}, 74, WPOINT.new(2204, 9134, 0), 74)
+    API.RandomSleep2(3000, 2500, 4000)
+    until API.IsPlayerAnimating_(player,20) or fulljar1 > fulljar2
+   
+    fulltick = math.random(1,10)
+    repeat
+        API.RandomSleep2(3000, 2500, 4000)
+    
+    print("NEW Fulltick: " .. fulltick)
+    until (API.InvItemcount_1(inventoryitems[1].FULLJAR) == 0 ) or not API.Read_LoopyLoop()
     print("Jar deposit completed")
     
 end
+
+print("NEW Fulltick: " .. fulltick)
 
 local function checkitems()
     print("Checking items")
@@ -137,7 +157,7 @@ local function handleswarm()
 end
 
 local function handleMemoryConversion()
-    checkitems()
+    --checkitems()
     local currentLevel = API.XPLevelTable(API.GetSkillXP("DIVINATION"))
 
     
@@ -154,6 +174,12 @@ local function handleMemoryConversion()
             end
         end
     end
+
+    repeat
+        print("Waiting for memory conversion")
+        API.RandomSleep2(2000, 1500, 1000)
+    until (API.IsPlayerAnimating_(player,20) == false ) or not API.Read_LoopyLoop()
+
 
 end
 
@@ -172,7 +198,7 @@ while API.Read_LoopyLoop() do
     local runDuration = os.difftime(currentTime, startTime)
 
 --break handlers
-    if runDuration > math.random(600, 900) then  -- 10-15 minutes in seconds
+    if runDuration > math.random(60*1000, 90*1000) then  -- 10-30 seconds
         takeBreak()
         startTime = os.time()  -- Reset start time after the break
     end
@@ -181,20 +207,17 @@ while API.Read_LoopyLoop() do
         API.Write_LoopyLoop(0)
     end
     API.SetDrawTrackedSkills(true)
-    repeat
-    until API.WaitUntilMovingandAnimEnds(2,2) or not API.Read_LoopyLoop()
-
-
+  
     idleCheck()
     local allMemoryIds = getAllMemoryIds()
     --print("All memory IDs: " .. table.concat(allMemoryIds, ", "))
     INVENTORYFULL()
     
-        local fulltick = math.random(5,20)
+        
         --print(fulltick)
         if API.InvItemcount_1(inventoryitems[1].FULLJAR) >= fulltick then
             handleJarDeposit()
-        elseif API.Invfreecount_() >= 3 then
+        elseif API.Invfreecount_() >= 14 then
             handleJarCollection()
         elseif API.InvItemcount_1(inventoryitems[1].EMPTYJAR) >= 1 then
             handleMemoryConversion()
