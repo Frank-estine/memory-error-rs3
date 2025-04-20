@@ -16,6 +16,7 @@
 * Start script near a bank or portable fletcher
 * Configure MAX_IDLE_TIME_MINUTES for anti-logout timing
 * You require Deads Util Script as well.
+* X items in Bank should be set to 14 
 --Changelog:
 
 Version: 1.0
