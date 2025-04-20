@@ -14,9 +14,11 @@
 -- DESCRIPTION
 * Have unstrung bows and bowstrings in bank
 * Start script near a bank or portable fletcher
+* Fort forinthry Start positions
 * Configure MAX_IDLE_TIME_MINUTES for anti-logout timing
-* You require Deads Util Script as well.
 * X items in Bank should be set to 14 
+* required Dead utils
+
 --Changelog:
 
 Version: 1.0
@@ -103,6 +105,7 @@ end
 local function Loppy()
     if not API.Read_LoopyLoop() then
         error("Script terminated by Loppy check")
+        return
     end
 end
 
@@ -116,7 +119,7 @@ local function openBank()
         local attempts = 0
         repeat
             API.DoAction_Object_string1(0x2e, API.OFF_ACT_GeneralObject_route1, {"Bank chest"}, 20, true)
-            UTILS.randomSleep(1800, 1200, 1500)  -- Increased from 1500 to random between 800-1500
+            UTILS.randomSleep(1800)  -- Increased from 1500 to random between 800-1500
             attempts = attempts + 1
             Loppy()
             print(string.format("Bank open attempt %d/%d", attempts, 5))
@@ -228,24 +231,28 @@ local function withdrawFletchingItems()
         API.RandomSleep2(1500, 1500, 1000)
     end
     
-    -- Single withdrawal block for both items
+    -- Modified withdrawal logic to handle <14 items
     local unstrungItem = unstrungTable[1]
     local bowstringItem = bowstringTable[1]
     
-    if unstrungItem and unstrungItem.size >= 14 and bowstringItem and bowstringItem.size >= 14 then
-        print(string.format("\nWithdrawing 14 %s and 14 %s", unstrungItem.name, bowstringItem.name))
+    if unstrungItem and unstrungItem.size > 0 and bowstringItem and bowstringItem.size > 0 then
+        local withdrawAmount = math.min(14, unstrungItem.size, bowstringItem.size)
+        print(string.format("\nWithdrawing %d %s and %d %s", 
+            withdrawAmount, unstrungItem.name, 
+            withdrawAmount, bowstringItem.name))
         
         -- Withdraw unstrung item
         API.DoAction_Bank(unstrungItem.id, 1, API.OFF_ACT_GeneralInterface_route)
-        unstrungItem.size = unstrungItem.size - 14
+        unstrungItem.size = unstrungItem.size - withdrawAmount
         if unstrungItem.size <= 0 then 
             table.remove(unstrungTable, 1)
             print("This type of unstrung item is now depleted")
         end
         API.RandomSleep2(1000, 500, 1000)
+        
         -- Withdraw bowstring
         API.DoAction_Bank(bowstringItem.id, 1, API.OFF_ACT_GeneralInterface_route)
-        bowstringItem.size = bowstringItem.size - 14
+        bowstringItem.size = bowstringItem.size - withdrawAmount
         if bowstringItem.size <= 0 then 
             table.remove(bowstringTable, 1)
             print("This type of bowstring is now depleted")
@@ -342,7 +349,7 @@ while API.Read_LoopyLoop() do
     -- Wait for completion
     print("Waiting for fletching to complete...")
     local start = os.time()
-    while API.isProcessing() or API.CheckAnim(100) do
+    while API.isProcessing() or API.CheckAnim(50) do
         if os.time() - start > processingTimeout then
             print("Warning: Processing timeout reached")
             API.Write_LoopyLoop(false)
