@@ -15,7 +15,7 @@
 * Have unstrung bows and bowstrings in bank
 * Start script near a bank or portable fletcher
 * Configure MAX_IDLE_TIME_MINUTES for anti-logout timing
-
+* You require Deads Util Script as well.
 --Changelog:
 
 Version: 1.0
