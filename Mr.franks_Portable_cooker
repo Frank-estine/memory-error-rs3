@@ -26,35 +26,35 @@ local UTILS = require("utils")
 --Changelog:
 
 Version: 1.0
-  Date: 2024-07-24
+  Date: 2025-04-23
   Changes:
     - Initial version with basic cooking functionality
     - Added bank withdrawal system for raw fish
     - Implemented anti-idle function to prevent logout
 
 Version: 1.1
-  Date: 2024-07-25
+  Date: 2025-04-23
   Changes:
     - Improved withdrawal logic to prevent duplicate actions
     - Added inventory status tracking
     - Enhanced sleep timers to prevent spamming
 
 Version: 1.2
-  Date: 2024-07-26
+  Date: 2025-04-23
   Changes:
     - Consolidated fish level definitions
     - Rewrote main loop to remove redundant checks
     - Added proper error handling for bank operations
 
 Version: 1.3
-  Date: 2024-07-27
+  Date: 2025-04-23
   Changes:
     - Added formatted inventory display showing remaining fish
     - Improved withdrawal messages with clearer status
     - Optimized sleep timers between actions
 
 Version: 1.4
-  Date: 2024-07-28
+  Date: 2025-04-23
   Changes:
     - Added cookable/uncookable fish separation
     - Added depletion messages for fish types
