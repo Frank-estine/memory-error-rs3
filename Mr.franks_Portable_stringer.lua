@@ -22,35 +22,35 @@
 --Changelog:
 
 Version: 1.0
-  Date: 2024-07-24
+  Date: 2025-04-01
   Changes:
     - Initial version with basic fletching functionality
     - Added bank withdrawal system for unstrung bows and bowstrings
     - Implemented anti-idle function to prevent logout
 
 Version: 1.1
-  Date: 2024-07-25
+  Date: 2025-04-02
   Changes:
     - Improved withdrawal logic to prevent duplicate actions
     - Added inventory status tracking
     - Enhanced sleep timers to prevent spamming
 
 Version: 1.2
-  Date: 2024-07-26
+  Date: 2025-04-03
   Changes:
     - Consolidated IDS definitions and removed duplicates
     - Rewrote main loop to remove redundant checks
     - Added proper error handling for bank operations
 
 Version: 1.3
-  Date: 2024-07-27
+  Date: 2025-04-04
   Changes:
     - Added formatted inventory display showing remaining items
     - Improved withdrawal messages with clearer status
     - Optimized sleep timers between actions
 
 Version: 1.4
-  Date: 2024-07-28
+  Date: 2025-04-05
   Changes:
     - Combined unstrung and bowstring withdrawals into single operation
     - Added depletion messages for item types
@@ -102,26 +102,52 @@ local function idleCheck()
 end
 
 -- Safety check to ensure script should continue
+-- Update the Loppy function to return status instead of error
 local function Loppy()
     if not API.Read_LoopyLoop() then
-        error("Script terminated by Loppy check")
-        return
+        print("Script termination requested")
+        return false
     end
+    return true
 end
 
--- SECTION 3: BANKING FUNCTIONS
--- =============================================
+-- Update the stringing function to handle Loppy's return value
+local function stringing()
+    print("Attempting to string bows...")
+    if not Loppy() then return false end
+    
+    local attempts = 0
+    repeat
+        if API.DoAction_Object1(0xcd, API.OFF_ACT_GeneralObject_route2, {Porta_ID.FLETCHER}, 50) then
+            UTILS.randomSleep(800, 1200, 1500)
+            
+            if API.Compare2874Status(18) then
+                print("Fletching interface opened")                
+                API.DoAction_Interface(0xffffffff, 0xffffffff, 0, 1370, 30, -1, API.OFF_ACT_GeneralInterface_Choose_option)
+                return true
+            end
+        end
+        
+        attempts = attempts + 1
+        print(string.format("Stringing attempt %d/%d", attempts, 3))
+        API.RandomSleep2(1000, 500, 1000)
+    until API.isProcessing() or not Loppy() or attempts >= 3
+    print("Stringing started...")
+    return false
+end
 
--- Opens bank if not already open
+-- Update the openBank function's Loppy call
 local function openBank()
     print("Attempting to open bank...")
     if not API.BankOpen2() then
         local attempts = 0
         repeat
-            API.DoAction_Object_string1(0x2e, API.OFF_ACT_GeneralObject_route1, {"Bank chest"}, 20, true)
-            UTILS.randomSleep(1800)  -- Increased from 1500 to random between 800-1500
+            if not API.DoAction_NPC(0x5, API.OFF_ACT_InteractNPC_route, {3418}, 50) then  
+                API.DoAction_Object_string1(0x2e, API.OFF_ACT_GeneralObject_route1, {"Bank chest"}, 20, true) 
+            end
+            UTILS.randomSleep(1800)
             attempts = attempts + 1
-            Loppy()
+            if not Loppy() then return false end
             print(string.format("Bank open attempt %d/%d", attempts, 5))
         until API.BankOpen2() or attempts > 5
         return API.BankOpen2()
@@ -304,10 +330,9 @@ local function stringing()
             UTILS.randomSleep(800, 1200, 1500)  -- Added sleep after fletcher interaction
             
             if API.Compare2874Status(18) then
-                print("Fletching interface opened")
-                UTILS.randomSleep(1500)
+                print("Fletching interface opened")                
                 API.DoAction_Interface(0xffffffff, 0xffffffff, 0, 1370, 30, -1, API.OFF_ACT_GeneralInterface_Choose_option)
-                print("Stringing started...")
+             
                 return true
             end
         end
@@ -316,7 +341,7 @@ local function stringing()
         print(string.format("Stringing attempt %d/%d", attempts, 3))
         API.RandomSleep2(1000, 500, 1000)
     until API.isProcessing() or not API.Read_LoopyLoop() or attempts >= 3
-    
+    print("Stringing started...")
     return false
 end
 
