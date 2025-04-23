@@ -15,11 +15,13 @@ local UTILS = require("utils")
     Contributions and improvements are welcome!
 
 -- DESCRIPTION
+- Only cooks fishes
 * Have raw fish in bank
-* Start script near a bank or cooking range
+* Start script near a forty bank or GE bank
 * Configure MAX_IDLE_TIME_MINUTES for anti-logout timing
 * X items in Bank should be set to 28
-* Required API and UTILS libraries
+* Required API and DEAD UTILS libraries
+
 
 --Changelog:
 
