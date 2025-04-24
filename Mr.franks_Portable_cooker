@@ -477,9 +477,24 @@ end
 debugPrint("Starting main loop", 1)
 debugPrint("Debug level: " .. DEBUG_LEVEL, 1)
 API.Write_LoopyLoop(true)
+-- Add this near the top with other variables
+local lastCookingLevel = 0
+
+-- Modified main loop
 while (API.Read_LoopyLoop()) do
     local currentTime = os.time()
     local runDuration = os.difftime(currentTime, startTime)
+    
+    -- Get current cooking level
+    local currentCookingLevel = API.XPLevelTable(API.GetSkillXP("COOKING"))
+    
+    -- Check if we leveled up
+    if currentCookingLevel > lastCookingLevel then
+        debugPrint("Cooking level increased from "..lastCookingLevel.." to "..currentCookingLevel.."! Refreshing fish tables...", 1)
+        lastCookingLevel = currentCookingLevel
+        lastFishingLevel = API.XPLevelTable(API.GetSkillXP("FISHING")) -- Also update fishing level
+        fetchRawFish() -- Refresh the fish list
+    end
 
     if runDuration > math.random(600, 900) then  -- 10-15 minutes in seconds
         takeBreak()
@@ -488,6 +503,7 @@ while (API.Read_LoopyLoop()) do
 
     idleCheck()
     Bank()
+    
     if API.Read_LoopyLoop() == false then
         debugPrint("Exiting main loop - Read_LoopyLoop is false", 1)
         break
