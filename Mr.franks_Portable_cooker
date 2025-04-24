@@ -1,3 +1,4 @@
+
 local API = require("api")
 local UTILS = require("utils")
 
@@ -262,9 +263,22 @@ local function fetchRawFish()
 end
 
 -- Withdraws raw fish from bank
+-- Modify the withdrawRawFish function to properly check for level ups
 local function withdrawRawFish()
     debugPrint("Withdrawing raw fish...", 1)
     
+    -- Get current levels before proceeding
+    local currentFishingLevel = API.XPLevelTable(API.GetSkillXP("FISHING"))
+    local currentCookingLevel = API.XPLevelTable(API.GetSkillXP("COOKING"))
+    
+    -- Check if we leveled up since last check
+    if currentCookingLevel > lastFishingLevel then
+        debugPrint("Cooking level increased! Refreshing fish table...", 1)
+        if not fetchRawFish() then
+            return false
+        end
+    end
+
     -- Only proceed if bank is open
     if not API.BankOpen2() then
         debugPrint("Bank not open, cannot withdraw items", 1)
@@ -351,8 +365,22 @@ local function withdrawRawFish()
 end
 
 -- Opens bank and withdraws fish
+-- Update the Bank function to properly track levels
 local function Bank()
     debugPrint("Starting Bank function", 1)
+    -- Get current levels before proceeding
+    local currentFishingLevel = API.XPLevelTable(API.GetSkillXP("FISHING"))
+    local currentCookingLevel = API.XPLevelTable(API.GetSkillXP("COOKING"))
+    
+    -- Check if we leveled up since last check
+    if currentCookingLevel > lastFishingLevel then
+        debugPrint("Cooking level increased! Refreshing fish table...", 1)
+        lastFishingLevel = currentFishingLevel
+        if not fetchRawFish() then
+            return
+        end
+    end
+
     repeat
         if not API.DoAction_NPC(0x5, API.OFF_ACT_InteractNPC_route, {3418}, 50) then  
             API.DoAction_Object_string1(0x2e, API.OFF_ACT_GeneralObject_route1, {"Bank chest"}, 20, true) 
