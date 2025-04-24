@@ -60,6 +60,14 @@ Version: 1.4
     - Added cookable/uncookable fish separation
     - Added depletion messages for fish types
     - Enhanced anti-idle timing with random intervals
+
+Version: 1.5
+  Date: 2025-04-24
+  Changes:
+    - Added real-time level-up detection
+    - Automatic fish table refresh when cooking level increases
+    - Improved level tracking system
+    - Enhanced debug messages for level changes
 --]]
 
 -- ===== CONFIGURATION =====
