@@ -53,7 +53,8 @@ local PLOT_IDS = {
     WOODCUTTING = 4,
     CRAFTING = 163,
     SMITHING = 161,
-    FIREMAKING = 162
+    FIREMAKING = 162,
+    EXIT_PORTAL = 72
 }
 
 -- Skilling objects and actions
@@ -235,6 +236,22 @@ local function getNextSkill()
     return nil
 end
 
+-- TAG: Exit Function
+local function exitCitadel()
+    print("All skills complete or failed, exiting citadel...")
+    teleportToPlot(PLOT_IDS.EXIT_PORTAL)
+    API.RandomSleep2(2000, 1000, 3000)
+    
+    -- Use the portal to exit
+    API.DoAction_Object_String("Portal", 0, "Teleport to Surface", 50, true)
+    API.RandomSleep2(3000, 2000, 4000)
+    
+    -- Execute ShopRunner script
+    local scriptPath = "scripts/ShopRunner copy.lua"
+    print("Launching ShopRunner script...")
+    API.RunScript(scriptPath)
+end
+
 -- TAG: Main Loop
 API.Write_LoopyLoop(true)
 
@@ -249,6 +266,7 @@ while API.Read_LoopyLoop() do
     
     if not currentMode then
         print("No available skills to perform")
+        exitCitadel()
         break
     end
     
