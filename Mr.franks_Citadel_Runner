@@ -14,6 +14,7 @@ v1.0 - 31-08-2025
     - Added XP tracking and fail detection system
     - Smart teleport system to minimize plot changes
     - Persistent action selection per skill
+    - Exit citadel on all skill completetion.
 --]]
 
 -- TAG: Module Imports and Initialization
