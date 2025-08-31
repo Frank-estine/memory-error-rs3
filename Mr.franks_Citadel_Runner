@@ -14,7 +14,16 @@ v1.0 - 31-08-2025
     - Added XP tracking and fail detection system
     - Smart teleport system to minimize plot changes
     - Persistent action selection per skill
-    - Exit citadel on all skill completetion.
+
+v1.1 - 31-08-2025
+    - Added exit portal functionality (Plot 172)
+    - Implemented automatic script switching to ShopRunner
+    - Fixed inconsistent object interactions using Interact:Object
+    - Added "Quick Teleport" option for portal exit
+    - Optimized fail detection and skill switching
+    - Removed unused module imports
+    - Fixed portal teleport sequence
+    - Added proper error handling for skill failures
 --]]
 
 -- TAG: Module Imports and Initialization
@@ -37,12 +46,12 @@ local skillMap = {
 -- Enable/disable skills (maximum 2 skills should be true)
 local SKILL_STATUS = {
     SUMMONING = true,    -- Will be first priority if enabled
-    MINING = false,
-    WOODCUTTING = false,
-    COOKING = true,
-    CRAFTING = false,
-    SMITHING = false,
-    FIREMAKING = false
+    MINING = true,
+    -- WOODCUTTING = true,
+    -- COOKING = true,
+    -- CRAFTING = true,
+    -- SMITHING = true,
+    -- FIREMAKING = true
 }
 
 -- Plot teleport IDs
@@ -55,7 +64,7 @@ local PLOT_IDS = {
     CRAFTING = 163,
     SMITHING = 161,
     FIREMAKING = 162,
-    EXIT_PORTAL = 72
+    EXIT_PORTAL = 172
 }
 
 -- Skilling objects and actions
@@ -84,7 +93,7 @@ local SKILL_OBJECTS = {
         {name = "Precious ore container", action = "Shovel"}
     },
     FIREMAKING = {
-        {name = "woodchip", action = "Shovel"}
+        {name = "Woodchip", action = "Shovel"}
     }
 }
 
@@ -134,6 +143,7 @@ local function teleportToPlot(plotId)
     API.DoAction_Interface(0xffffffff, 0xffffffff, 1, 1465, 9, -1, API.OFF_ACT_GeneralInterface_route)
     API.RandomSleep2(2000, 1000, 3000)
     -- Select plot
+    
     API.DoAction_Interface(0xb3, 0xffffffff, 1, 1259, plotId, -1, API.OFF_ACT_GeneralInterface_route)
     API.RandomSleep2(2000, 1000, 3000)
     checker()
@@ -240,12 +250,17 @@ end
 -- TAG: Exit Function
 local function exitCitadel()
     print("All skills complete or failed, exiting citadel...")
+
+    -- Teleport to exit portal plot
     teleportToPlot(PLOT_IDS.EXIT_PORTAL)
     API.RandomSleep2(2000, 1000, 3000)
     
     -- Use the portal to exit
-    API.DoAction_Object_String("Portal", 0, "Teleport to Surface", 50, true)
+    Interact:Object("Portal", "Quick Teleport")
     API.RandomSleep2(3000, 2000, 4000)
+    
+    -- Wait for teleport animation
+    API.WaitUntilMovingEnds()
     
     -- Execute ShopRunner script
     local scriptPath = "scripts/ShopRunner copy.lua"
@@ -257,7 +272,7 @@ end
 API.Write_LoopyLoop(true)
 
 -- Initial town square boost
-getTownSquareBoost()
+-- getTownSquareBoost()
 
 
 currentPlot = PLOT_IDS.TOWN_SQUARE  -- Set initial plot location
@@ -282,14 +297,28 @@ while API.Read_LoopyLoop() do
     xpcheck(startXp, currentMode)
     
     if fails >= maxFails then
-        currentPlot = PLOT_IDS.TOWN_SQUARE  -- Update current plot after town square
-        
         -- If summoning fails, disable it
         if currentMode == "SUMMONING" then
             print("Summoning failed, disabling it")
             SKILL_STATUS.SUMMONING = false
+            -- Check if we have another skill enabled
+            currentMode = getNextSkill()
+            if currentMode then
+                print("Switching to next skill: " .. currentMode)
+                fails = 0
+                goto continue
+            end
         end
+        
+        -- If we reach here, either summoning failed with no other skills
+        -- or another skill failed, so we should exit
+        exitCitadel()
+        -- Exit the script
+        API.Write_LoopyLoop(false)
+        break
     end
+    
+    ::continue::
     
     API.RandomSleep2(1000, 500, 1500)
 end
